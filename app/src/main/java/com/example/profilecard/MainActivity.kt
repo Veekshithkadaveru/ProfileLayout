@@ -29,11 +29,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Green
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 
 
@@ -55,10 +62,14 @@ fun MainScreen() {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Surface(
-                modifier = Modifier.fillMaxSize(), color = Color.LightGray
-            )
+                modifier = Modifier.fillMaxSize(), color = Color.LightGray)
             {
-                ProfileCard()
+                Column {
+                    ProfileCard()
+                    ProfileCard()
+                }
+
+
             }
         }
     }
@@ -85,8 +96,9 @@ fun AppBar() {
 fun ProfileCard() {
     Card(
         modifier = Modifier
-            .padding(16.dp)
+            .padding(top=8.dp, bottom = 4.dp, start = 16.dp, end = 16.dp)
             .fillMaxWidth()
+            .clip(MyCustomShape())
             .wrapContentHeight(align = Alignment.Top),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 4.dp
@@ -97,12 +109,29 @@ fun ProfileCard() {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
+
             ProfilePicture()
             ProfileContent()
         }
     }
 }
-
+class MyCustomShape : Shape {
+    override fun createOutline(
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density
+    ): Outline {
+        val path = Path().apply {
+            // Define your custom path here
+            moveTo(0f, -400f)
+            lineTo(size.width, 40f)
+            lineTo(size.width, size.height)
+            lineTo(-150000f, size.height / 2f)
+            close()
+        }
+        return Outline.Generic(path)
+    }
+}
 @Composable
 fun ProfilePicture() {
     Card(
