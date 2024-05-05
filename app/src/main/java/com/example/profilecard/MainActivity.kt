@@ -3,8 +3,8 @@ package com.example.profilecard
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen() {
+fun MainScreen(userProfiles: List<UserProfile> = userProfileList) {
     Scaffold(
         topBar = { AppBar() }) { innerPadding ->
         Column(
@@ -62,14 +62,14 @@ fun MainScreen() {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Surface(
-                modifier = Modifier.fillMaxSize(), color = Color.LightGray)
+                modifier = Modifier.fillMaxSize(), color = Color.LightGray
+            )
             {
                 Column {
-                    ProfileCard()
-                    ProfileCard()
+                    for (userProfile in userProfiles)
+                        ProfileCard(userProfile = userProfile)
+
                 }
-
-
             }
         }
     }
@@ -88,15 +88,15 @@ fun AppBar() {
         },
         title = { Text(text = "Messaging Users") },
         modifier = Modifier
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = 16.dp),
     )
 }
 
 @Composable
-fun ProfileCard() {
+fun ProfileCard(userProfile: UserProfile) {
     Card(
         modifier = Modifier
-            .padding(top=8.dp, bottom = 4.dp, start = 16.dp, end = 16.dp)
+            .padding(top = 8.dp, bottom = 4.dp, start = 16.dp, end = 16.dp)
             .fillMaxWidth()
             .clip(MyCustomShape())
             .wrapContentHeight(align = Alignment.Top),
@@ -110,11 +110,12 @@ fun ProfileCard() {
             horizontalArrangement = Arrangement.Start
         ) {
 
-            ProfilePicture()
-            ProfileContent()
+            ProfilePicture(userProfile.drawableId, userProfile.status)
+            ProfileContent(userProfile.name, userProfile.status)
         }
     }
 }
+
 class MyCustomShape : Shape {
     override fun createOutline(
         size: Size,
@@ -132,20 +133,27 @@ class MyCustomShape : Shape {
         return Outline.Generic(path)
     }
 }
+
 @Composable
-fun ProfilePicture() {
+fun ProfilePicture(drawableId: Int, onlineStatus: Boolean) {
     Card(
         shape = RoundedCornerShape(50.dp),
+        border = BorderStroke(
+            width = 2.dp,
+            color = if (onlineStatus)
+                Green
+            else Color.Red
+        ),
         modifier = Modifier
-            .padding(8.dp)
-            .border(2.dp, Green, RoundedCornerShape(50.dp)),
+            .padding(8.dp),
+        //  .border(2.dp, Green, RoundedCornerShape(50.dp)),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 4.dp
         )
     ) {
         Image(
 
-            painter = painterResource(id = R.drawable.profilepicture),
+            painter = painterResource(id = drawableId),
             contentDescription = "Content Description",
             modifier = Modifier.size(72.dp),
             contentScale = ContentScale.Crop,
@@ -156,18 +164,21 @@ fun ProfilePicture() {
 }
 
 @Composable
-fun ProfileContent() {
+fun ProfileContent(userName: String, onlineStatus: Boolean) {
     Column(
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
     ) {
         Text(
-            text = "Veekshith Kadaveru", style = MaterialTheme.typography.headlineSmall
+            text = userName,
+            style = MaterialTheme.typography.headlineSmall
         )
         Text(
             modifier = Modifier.alpha(0.5f),
-            text = "Active Now",
+            text = if (onlineStatus)
+                "Active Now"
+            else "Offline",
 
             style = MaterialTheme.typography.bodySmall
         )
