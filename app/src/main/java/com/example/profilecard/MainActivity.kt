@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -41,6 +42,7 @@ import androidx.compose.ui.graphics.Color.Companion.Green
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
@@ -48,9 +50,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
@@ -72,8 +76,12 @@ fun UsersApplication(userProfiles: List<UserProfile> = userProfileList) {
         composable("user_list") {
             UserListScreen(userProfiles, navController)
         }
-        composable("user_details") {
-            UserProfileDetailsScreen()
+        composable(route="user_details/{userId}",
+            arguments = listOf(navArgument("userId"){
+                type= NavType.IntType
+            })
+        ) {navBackStackEntry->
+            UserProfileDetailsScreen(navBackStackEntry.arguments!!.getInt("userId"),navController)
         }
     }
 }
@@ -81,7 +89,11 @@ fun UsersApplication(userProfiles: List<UserProfile> = userProfileList) {
 @Composable
 fun UserListScreen(userProfiles: List<UserProfile>, navController: NavHostController?) {
     Scaffold(
-        topBar = { AppBar() }) { innerPadding ->
+        topBar = { AppBar(
+            title = "Users List",
+            icon = Icons.Default.Home
+        ){ }
+        }) { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -93,7 +105,7 @@ fun UserListScreen(userProfiles: List<UserProfile>, navController: NavHostContro
                 LazyColumn {
                     items(userProfiles) { userProfile ->
                         ProfileCard(userProfile = userProfile) {
-                            navController?.navigate("user_details")
+                            navController?.navigate("user_details/${userProfile.id}")
                         }
 
                     }
@@ -104,10 +116,19 @@ fun UserListScreen(userProfiles: List<UserProfile>, navController: NavHostContro
 }
 
 @Composable
-fun UserProfileDetailsScreen(userProfile: UserProfile = userProfileList[0]) {
+fun UserProfileDetailsScreen(userId:Int,navController: NavHostController?) {
+    val userProfile= userProfileList.first { userProfile -> userId == userProfile.id }
 
     Scaffold(
-        topBar = { AppBar() }) { innerPadding ->
+        topBar = { AppBar(
+            title = "Users List",
+            icon = Icons.Default.ArrowBack)
+
+
+        {
+navController?.navigateUp()
+        }
+        }) { innerPadding ->
         Surface(
             modifier = Modifier
                 .padding(innerPadding)
@@ -127,16 +148,18 @@ fun UserProfileDetailsScreen(userProfile: UserProfile = userProfileList[0]) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppBar() {
+fun AppBar(title:String,icon:ImageVector,iconClickAction:() ->Unit) {
     TopAppBar(
 
         navigationIcon = {
             Icon(
-                Icons.Default.Home,
-                "Content Description"
+                icon,
+                "Content Description",
+                modifier = Modifier.padding(12.dp)
+                    .clickable(onClick = {iconClickAction.invoke()})
             )
         },
-        title = { Text(text = "Messaging Users") },
+        title = { Text(title) },
         //  modifier = Modifier.padding(horizontal = 16.dp),
         colors = TopAppBarDefaults.topAppBarColors(containerColor = Cyan)
     )
@@ -204,12 +227,14 @@ fun ProfilePicture(pictureUrl: String, onlineStatus: Boolean, imageSize: Dp) {
         )
     ) {
         Image(
+
             painter = rememberAsyncImagePainter(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(pictureUrl)
                     .transformations(CircleCropTransformation())
                     .build()
             ),
+            modifier = Modifier.size(720.dp),
             contentDescription = "ProfilePicture",
             )
     }
@@ -242,7 +267,7 @@ fun ProfileContent(userName: String, onlineStatus: Boolean, alignment: Alignment
 @Preview(showBackground = true)
 @Composable
 fun DetailsPreview() {
-    UserProfileDetailsScreen()
+    UserProfileDetailsScreen(userId = 0,null)
 }
 
 @Preview(showBackground = true)
